@@ -13,7 +13,7 @@ E2E: [`e2e/`](e2e/). Коммиты: [`docs/commits.md`](docs/commits.md).
 Triage расплывчатого issue: [`docs/triage.md`](docs/triage.md).  
 Цикл issue → PR → review → merge: [`docs/pr-cycle.md`](docs/pr-cycle.md).
 
-Ночной Lighthouse: workflow [lighthouse](.github/workflows/lighthouse.yml) по cron в 05:00 МСК (`0 2 * * *` UTC) и вручную (Actions → lighthouse → Run workflow). HTML/JSON лежат в артефакте `lighthouse-report` 14 дней.
+Ночной Lighthouse: workflow [lighthouse](.github/workflows/lighthouse.yml) по cron в 05:00 МСК (`0 2 * * *` UTC) и вручную (Actions → lighthouse → Run workflow). HTML/JSON лежат в артефакте `lighthouse-report` 14 дней. Итоги первого прогона: [`docs/lighthouse.md`](docs/lighthouse.md).
 
 OpenCode в GitHub: комментарий `/oc` или `/opencode` в issue/PR запускает [workflow](.github/workflows/opencode.yml). Нужны GitHub App [opencode-agent](https://github.com/apps/opencode-agent) и секрет `OPENCODE_API_KEY` ([ключ Zen](https://opencode.ai/auth)).
 
