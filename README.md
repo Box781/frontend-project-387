@@ -15,7 +15,7 @@ Triage расплывчатого issue: [`docs/triage.md`](docs/triage.md).
 
 Ночной Lighthouse: workflow [lighthouse](.github/workflows/lighthouse.yml) по cron в 05:00 МСК (`0 2 * * *` UTC) и вручную (Actions → lighthouse → Run workflow). HTML/JSON лежат в артефакте `lighthouse-report` 14 дней. Итоги первого прогона: [`docs/lighthouse.md`](docs/lighthouse.md).
 
-OpenCode в GitHub: комментарий `/oc` или `/opencode` в issue/PR запускает [workflow](.github/workflows/opencode.yml). Нужны GitHub App [opencode-agent](https://github.com/apps/opencode-agent) и секрет `OPENCODE_API_KEY` ([ключ Zen](https://opencode.ai/auth)).
+OpenCode в GitHub: комментарий `/oc` или `/opencode` в issue/PR запускает [workflow](.github/workflows/opencode.yml). Нужны GitHub App [opencode-agent](https://github.com/apps/opencode-agent) и секрет `OPENCODE_API_KEY` ([ключ Zen](https://opencode.ai/auth)). Проверка интеграции: [`docs/agent-github.md`](docs/agent-github.md). Run-ы: [Actions](https://github.com/Box781/frontend-project-387/actions).
 
 Локально: `make backend` и в другом терминале `make frontend`.  
 Сценарии бронирования: `make e2e`.
