@@ -21,7 +21,7 @@ Lighthouse: [workflow lighthouse](https://github.com/Box781/frontend-project-387
 
 | Workflow | Права | Зачем |
 | --- | --- | --- |
-| OpenCode | `contents`, `pull-requests`, `issues`: write | Коммит, PR, комментарий в issue. `id-token` убран: работаем через `GITHUB_TOKEN`, не через OIDC App |
+| OpenCode | `id-token`, `contents`, `pull-requests`, `issues`: write | App OIDC (`id-token`) и коммит/PR/комментарий. Пуш идёт через `GITHUB_TOKEN` (`use_github_token: true`) |
 | Lighthouse | `contents: read` | Только checkout и артефакт |
 | release-please | `contents`, `pull-requests`: write | Release-PR. `issues: write` не нужен |
 | e2e | `contents: read` | Тесты не пишут в репозиторий |
@@ -54,3 +54,14 @@ Lighthouse: [workflow lighthouse](https://github.com/Box781/frontend-project-387
 - Ревью в той же ветке: `git push` не проходил, пока checkout не получил `persist-credentials`.
 
 Итог: разбор и отчёты чаще сходятся с первого раза; запись в репозиторий (ветка, PR, push) потребовала настройки токена. Это ожидаемо: модель отвечает быстро, а права GitHub — отдельно.
+
+## Соответствие автопроверке Hexlet
+
+Порядок как в интерфейсе курса: верхний уровень должен быть зелёным, иначе ниже не смотрят.
+
+1. **Контракт запуска.** Корневой `Dockerfile`, UI+API в одном образе, `HOST=0.0.0.0`, порт из `PORT`. Пример: `docker run --rm -e PORT=8080 -p 8080:8080 call-booking`.
+2. **Workflow и доступы.** App [opencode-agent](https://github.com/apps/opencode-agent) на репозитории, секрет `OPENCODE_API_KEY`, [opencode.yml](../.github/workflows/opencode.yml) на `issue_comment` и `pull_request_review_comment`, [lighthouse.yml](../.github/workflows/lighthouse.yml) на `schedule`.
+3. **Сценарии.** Ответ в issue, triage #2, PR #4, общее и построчное ревью с доработкой, отчёт Lighthouse в артефакте.
+4. **Безопасность.** Команда `/oc` только от человека, боты отсекаются, timeout 20 минут, Lighthouse без LLM раз в сутки.
+
+Статус автопроверки: [Actions → hexlet-check](https://github.com/Box781/frontend-project-387/actions/workflows/hexlet-check.yml).
