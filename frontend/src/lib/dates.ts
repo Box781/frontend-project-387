@@ -4,7 +4,13 @@ import type { Slot } from '@/api/types'
 
 function toUtcDate(iso: string): Date {
   const d = new Date(iso)
-  return new Date(d.getTime() + d.getTimezoneOffset() * 60_000)
+  return new Date(
+    Date.UTC(
+      d.getUTCFullYear(),
+      d.getUTCMonth(),
+      d.getUTCDate(),
+    ),
+  )
 }
 
 function utcTime(iso: string) {

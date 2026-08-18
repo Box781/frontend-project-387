@@ -208,7 +208,7 @@ export function GuestBookPage() {
                 className="justify-center"
                 onClick={() => setSelectedSlot(slot)}
               >
-                {formatSlotTime(slot.startAt)}
+                {formatSlotTime(slot.startAt)} UTC
               </Button>
             ))}
           </div>
