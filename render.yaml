@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: call-booking
+    runtime: docker
+    plan: free
+    healthCheckPath: /public/event-types
+    envVars:
+      - key: HOST
+        value: 0.0.0.0

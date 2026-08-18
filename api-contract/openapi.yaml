@@ -1,0 +1,473 @@
+openapi: 3.1.0
+info:
+  title: Call Booking API
+  description: |-
+    Call Booking API — Design First contract for a Cal.com-like scheduler.
+
+    There is no registration or authentication. Roles are separated by URL:
+    `/public/*` is the guest flow, `/admin/*` is the single predefined owner.
+
+    Domain:
+    - Owner: one hardcoded calendar owner. Used by the admin UI; not a user account.
+    - EventType: a bookable meeting template (id, title, description, duration).
+    - Slot: a free [startAt, endAt) interval generated for an event type.
+    - Booking: a guest reservation of one slot.
+
+    Booking window:
+    available slots cover 14 calendar days starting from the server's current
+    UTC date (today inclusive, the 15th day exclusive). A guest may book only a
+    free slot from this window.
+
+    Occupancy:
+    at most one booking may cover any instant. Intervals [startAt, endAt) must
+    not overlap, even when event types differ.
+
+    Slot generation (fixed availability):
+    - Timezone: UTC
+    - Days: Monday–Friday
+    - Hours: 09:00 inclusive – 18:00 exclusive
+    - Grid: starts at 09:00, then every `durationMinutes`, while endAt <= 18:00
+    - Hide slots whose startAt is not strictly in the future
+  version: 0.0.0
+tags:
+  - name: Guest
+  - name: Owner
+paths:
+  /admin/bookings:
+    get:
+      operationId: OwnerAdmin_listUpcomingBookings
+      description: |-
+        Upcoming meetings across all event types, ordered by startAt ascending.
+        Only bookings with startAt in the future are returned.
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Booking'
+              example:
+                - id: bkg_01
+                  eventTypeId: intro-call
+                  eventTypeTitle: Знакомство
+                  startAt: '2026-08-19T10:00:00.000Z'
+                  endAt: '2026-08-19T10:30:00.000Z'
+                  guestName: Иван Петров
+                  guestEmail: ivan@example.com
+      tags:
+        - Owner
+  /admin/event-types:
+    get:
+      operationId: OwnerAdmin_listEventTypes
+      description: Event types the owner has created.
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EventType'
+              example:
+                - id: intro-call
+                  title: Знакомство
+                  description: Короткий звонок, чтобы обсудить задачу.
+                  durationMinutes: 30
+                - id: demo
+                  title: Демо продукта
+                  description: Покажем, как устроен сервис, и ответим на вопросы.
+                  durationMinutes: 45
+      tags:
+        - Owner
+    post:
+      operationId: OwnerAdmin_createEventType
+      description: |-
+        Create an event type.
+        409 EVENT_TYPE_ID_TAKEN — id already exists.
+      parameters: []
+      responses:
+        '201':
+          description: The request has succeeded and a new resource has been created as a result.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventType'
+        '400':
+          description: The server could not understand the request due to invalid syntax.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequestError'
+        '409':
+          description: The request conflicts with the current state of the server.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConflictError'
+      tags:
+        - Owner
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateEventTypeRequest'
+  /admin/owner:
+    get:
+      operationId: OwnerAdmin_getOwner
+      description: The hardcoded owner profile used by the admin UI.
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Owner'
+      tags:
+        - Owner
+  /public/bookings:
+    post:
+      operationId: Guest_createBooking
+      description: |-
+        Book a free slot.
+        400 SLOT_OUTSIDE_WINDOW — startAt is outside the 14-day window
+        400 SLOT_NOT_AVAILABLE — startAt is not a generated slot (wrong grid/hours)
+        409 SLOT_OCCUPIED — the interval overlaps an existing booking
+      parameters: []
+      responses:
+        '201':
+          description: The request has succeeded and a new resource has been created as a result.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Booking'
+        '400':
+          description: The server could not understand the request due to invalid syntax.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequestError'
+        '404':
+          description: The server cannot find the requested resource.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundError'
+        '409':
+          description: The request conflicts with the current state of the server.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConflictError'
+      tags:
+        - Guest
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateBookingRequest'
+  /public/event-types:
+    get:
+      operationId: Guest_listEventTypes
+      description: 'Booking-types page: title, description, duration for every event type.'
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EventType'
+              example:
+                - id: intro-call
+                  title: Знакомство
+                  description: Короткий звонок, чтобы обсудить задачу.
+                  durationMinutes: 30
+                - id: demo
+                  title: Демо продукта
+                  description: Покажем, как устроен сервис, и ответим на вопросы.
+                  durationMinutes: 45
+      tags:
+        - Guest
+  /public/event-types/{eventTypeId}:
+    get:
+      operationId: Guest_getEventType
+      description: Open one event type before showing its calendar.
+      parameters:
+        - name: eventTypeId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventType'
+        '404':
+          description: The server cannot find the requested resource.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundError'
+      tags:
+        - Guest
+  /public/event-types/{eventTypeId}/slots:
+    get:
+      operationId: Guest_listSlots
+      description: |-
+        Free slots for the next 14 UTC days for this event type.
+        Occupied time (any event type) is excluded.
+      parameters:
+        - name: eventTypeId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Slot'
+              example:
+                - startAt: '2026-08-18T09:00:00.000Z'
+                  endAt: '2026-08-18T09:30:00.000Z'
+                - startAt: '2026-08-18T09:30:00.000Z'
+                  endAt: '2026-08-18T10:00:00.000Z'
+                - startAt: '2026-08-19T10:00:00.000Z'
+                  endAt: '2026-08-19T10:30:00.000Z'
+                - startAt: '2026-08-20T14:00:00.000Z'
+                  endAt: '2026-08-20T14:30:00.000Z'
+        '404':
+          description: The server cannot find the requested resource.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundError'
+      tags:
+        - Guest
+components:
+  schemas:
+    BadRequestError:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+          enum:
+            - VALIDATION_ERROR
+            - SLOT_OUTSIDE_WINDOW
+            - SLOT_NOT_AVAILABLE
+        message:
+          type: string
+    Booking:
+      type: object
+      required:
+        - id
+        - eventTypeId
+        - eventTypeTitle
+        - startAt
+        - endAt
+        - guestName
+        - guestEmail
+      properties:
+        id:
+          type: string
+        eventTypeId:
+          type: string
+        eventTypeTitle:
+          type: string
+        startAt:
+          type: string
+          format: date-time
+        endAt:
+          type: string
+          format: date-time
+        guestName:
+          type: string
+        guestEmail:
+          type: string
+      description: Confirmed reservation. `endAt` is computed from the event type duration.
+      examples:
+        - id: bkg_01
+          eventTypeId: intro-call
+          eventTypeTitle: Знакомство
+          startAt: '2026-08-19T10:00:00.000Z'
+          endAt: '2026-08-19T10:30:00.000Z'
+          guestName: Иван Петров
+          guestEmail: ivan@example.com
+    ConflictError:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+          enum:
+            - SLOT_OCCUPIED
+            - EVENT_TYPE_ID_TAKEN
+        message:
+          type: string
+    CreateBookingRequest:
+      type: object
+      required:
+        - eventTypeId
+        - startAt
+        - guestName
+        - guestEmail
+      properties:
+        eventTypeId:
+          type: string
+          pattern: ^[a-z0-9]+(?:-[a-z0-9]+)*$
+        startAt:
+          type: string
+          format: date-time
+          description: |-
+            Must equal `startAt` of a slot currently returned by
+            `GET /public/event-types/{eventTypeId}/slots`.
+        guestName:
+          type: string
+          minLength: 1
+          maxLength: 120
+        guestEmail:
+          type: string
+          format: email
+      description: Guest request to reserve a slot.
+    CreateEventTypeRequest:
+      type: object
+      required:
+        - id
+        - title
+        - description
+        - durationMinutes
+      properties:
+        id:
+          type: string
+          minLength: 1
+          maxLength: 64
+          pattern: ^[a-z0-9]+(?:-[a-z0-9]+)*$
+        title:
+          type: string
+          minLength: 1
+          maxLength: 120
+        description:
+          type: string
+          maxLength: 2000
+        durationMinutes:
+          $ref: '#/components/schemas/DurationMinutes'
+      description: Body for creating an event type. The owner supplies the id.
+    DurationMinutes:
+      type: number
+      enum:
+        - 15
+        - 30
+        - 45
+        - 60
+      description: Allowed meeting lengths in minutes.
+    EventType:
+      type: object
+      required:
+        - id
+        - title
+        - description
+        - durationMinutes
+      properties:
+        id:
+          type: string
+          minLength: 1
+          maxLength: 64
+          pattern: ^[a-z0-9]+(?:-[a-z0-9]+)*$
+          description: |-
+            Owner-chosen identifier (slug). Unique among event types.
+            Pattern: lowercase letters, digits, hyphens.
+        title:
+          type: string
+          minLength: 1
+          maxLength: 120
+        description:
+          type: string
+          maxLength: 2000
+        durationMinutes:
+          $ref: '#/components/schemas/DurationMinutes'
+      description: Bookable meeting template created by the owner.
+      examples:
+        - id: intro-call
+          title: Знакомство
+          description: Короткий звонок, чтобы обсудить задачу.
+          durationMinutes: 30
+    NotFoundError:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+          enum:
+            - NOT_FOUND
+        message:
+          type: string
+    Owner:
+      type: object
+      required:
+        - id
+        - displayName
+        - timezone
+      properties:
+        id:
+          type: string
+          description: Stable identifier of the hardcoded owner.
+        displayName:
+          type: string
+        timezone:
+          type: string
+          enum:
+            - UTC
+          description: Slot math and the 14-day window use this timezone. Always UTC.
+      description: |-
+        The single predefined calendar owner.
+        Not created via API; the admin UI reads this profile as-is.
+      examples:
+        - id: owner
+          displayName: Анна Ковалева
+          timezone: UTC
+    Slot:
+      type: object
+      required:
+        - startAt
+        - endAt
+      properties:
+        startAt:
+          type: string
+          format: date-time
+        endAt:
+          type: string
+          format: date-time
+      description: |-
+        A free interval the guest may book.
+        `endAt` is always `startAt` plus the event type duration.
+      examples:
+        - startAt: '2026-08-18T09:00:00.000Z'
+          endAt: '2026-08-18T09:30:00.000Z'
+servers:
+  - url: http://localhost:3000
+    description: Local development
+    variables: {}

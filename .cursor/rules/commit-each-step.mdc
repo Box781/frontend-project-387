@@ -1,0 +1,12 @@
+---
+description: After each Hexlet course step, commit and push without asking
+alwaysApply: true
+---
+
+# Git at the end of each step
+
+When a Hexlet course step in this repo is finished, commit the relevant files and push to `origin` on the current branch. Do not wait for the user to ask.
+
+Commit messages follow Conventional Commits, including agent commits: `feat:`, `fix:`, `docs:`, `ci:`, `chore:`, `test:`. See `docs/commits.md`.
+
+Do not commit secrets, `node_modules`, or build artifacts (`dist`).
