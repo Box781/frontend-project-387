@@ -4,4 +4,6 @@ tsp-output/
 test-results/
 playwright-report/
 blob-report/
+.lighthouseci/
+lhci-reports/
 

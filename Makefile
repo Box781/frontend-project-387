@@ -1,4 +1,4 @@
-.PHONY: tsp prism frontend backend e2e docker-build docker-run
+.PHONY: tsp prism frontend backend e2e docker-build docker-run lighthouse
 
 tsp:
 	cd api-contract && npm ci && npm run compile
@@ -20,3 +20,9 @@ docker-build:
 
 docker-run:
 	docker run --rm -e PORT=8080 -p 8080:8080 call-booking
+
+lighthouse:
+	cd frontend && SCARF_ANALYTICS=false VITE_API_BASE_URL= npm ci && npm run build
+	cd backend && npm ci
+	npx --yes @lhci/cli@0.15.x autorun
+	node scripts/lighthouse-summary.mjs lhci-reports

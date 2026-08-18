@@ -1,0 +1,55 @@
+# Nightly Lighthouse: cron (like OpenCode schedule) plus manual run from Actions.
+name: lighthouse
+
+on:
+  schedule:
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+jobs:
+  lighthouse:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install backend
+        working-directory: backend
+        run: npm ci
+
+      - name: Install and build frontend
+        working-directory: frontend
+        env:
+          SCARF_ANALYTICS: 'false'
+          VITE_API_BASE_URL: ''
+        run: |
+          npm ci
+          npm run build
+
+      - name: Run Lighthouse CI
+        run: |
+          npm install -g @lhci/cli@0.15.x
+          lhci autorun
+
+      - name: Write job summary
+        if: always()
+        run: node scripts/lighthouse-summary.mjs lhci-reports
+
+      - name: Upload Lighthouse report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-report
+          path: |
+            lhci-reports
+            .lighthouseci
+          retention-days: 14
+          if-no-files-found: warn
