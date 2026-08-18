@@ -10,7 +10,8 @@
 Бэкенд: [`backend/`](backend/).  
 E2E: [`e2e/`](e2e/). Коммиты: [`docs/commits.md`](docs/commits.md).  
 План развития (фичи и баги для агента): [`docs/roadmap.md`](docs/roadmap.md).  
-Triage расплывчатого issue: [`docs/triage.md`](docs/triage.md).
+Triage расплывчатого issue: [`docs/triage.md`](docs/triage.md).  
+Цикл issue → PR → review → merge: [`docs/pr-cycle.md`](docs/pr-cycle.md).
 
 OpenCode в GitHub: комментарий `/oc` или `/opencode` в issue/PR запускает [workflow](.github/workflows/opencode.yml). Нужны GitHub App [opencode-agent](https://github.com/apps/opencode-agent) и секрет `OPENCODE_API_KEY` ([ключ Zen](https://opencode.ai/auth)).
 
