@@ -97,7 +97,7 @@ export function GuestBookPage() {
           </p>
           <p className="flex items-center gap-2 text-sm">
             <Globe className="size-4" />
-            Локальное время
+            Время (UTC)
           </p>
           <p className="text-sm font-medium">{formatSlotRange(selectedSlot.startAt, selectedSlot.endAt)}</p>
         </aside>
@@ -159,7 +159,7 @@ export function GuestBookPage() {
           </p>
           <p className="flex items-center gap-2 text-sm text-muted-foreground">
             <Globe className="size-4" />
-            Локальное время
+            Время (UTC)
           </p>
         </aside>
 
